@@ -100,6 +100,7 @@ local function peer_fail(ctx, is_backup, id, peer)
 
     local key = gen_peer_key("nok:", u, is_backup, id)
     local fails, err = dict:get(key)
+    peer.upstream = u
     if not fails then
         if err then
             errlog("failed to get peer nok key: ", err)
@@ -145,10 +146,9 @@ local function peer_fail(ctx, is_backup, id, peer)
                 " failure(s)")
         peer.down = true
         set_peer_down_globally(ctx, is_backup, id, true)
-
-        if ctx.hook_down then
-            ctx.hook_down(peer)
-        end
+    end
+    if peer.down and ctx.hook_down then
+        ctx.hook_down(peer)
     end
 end
 
@@ -160,6 +160,7 @@ local function peer_ok(ctx, is_backup, id, peer)
 
     local key = gen_peer_key("ok:", u, is_backup, id)
     local succ, err = dict:get(key)
+    peer.upstream = u
     if not succ then
         if err then
             errlog("failed to get peer ok key: ", err)
@@ -202,10 +203,9 @@ local function peer_ok(ctx, is_backup, id, peer)
                 " success(es)")
         peer.down = nil
         set_peer_down_globally(ctx, is_backup, id, nil)
-
-        if ctx.hook_up then
-            ctx.hook_up(peer)
-        end
+    end
+    if peer.down == nil and ctx.hook_up then
+        ctx.hook_up(peer)
     end
 end
 
